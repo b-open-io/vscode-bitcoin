@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/context-menu'
 import {
   Wallet, RefreshCw, Send, Download, Copy,
-  MapPin, Image, Coins, Flame, FolderOpen, Loader2, X, ExternalLink, Check, FileText, Play, Sparkles, Store
+  MapPin, Image, Coins, Flame, FolderOpen, Loader2, X, ExternalLink, Check, FileText, Play, Sparkles, Store, Grid
 } from 'lucide-react'
 import { getVscode } from '../vscode'
 import { useVault } from '../contexts/VaultContext'
@@ -837,6 +837,34 @@ export default function WalletTab({ isActive }: WalletTabProps) {
                           >
                             <Sparkles className="h-3 w-3 mr-1" />
                             Mint Token
+                          </Button>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+
+                    {/* Collection Minter */}
+                    <AccordionItem value="mint-collection">
+                      <AccordionTrigger className="text-xs py-2">
+                        <div className="flex items-center gap-2">
+                          <Grid className="h-3 w-3" />
+                          Collection Minter
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="text-center py-4 text-muted-foreground text-xs">
+                          <p className="mb-2">Create NFT collections with AI-generated images</p>
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={() => {
+                              vscode.postMessage({
+                                type: 'wallet:openCollectionMinter'
+                              })
+                            }}
+                            className="h-7 text-xs"
+                          >
+                            <Grid className="h-3 w-3 mr-1" />
+                            Open Collection Minter
                           </Button>
                         </div>
                       </AccordionContent>

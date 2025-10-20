@@ -21,6 +21,7 @@ import { createIdentitySigner } from '../../utils/identitySigner';
 import type { LocalSigner } from 'js-1sat-ord';
 import { txCache } from '../../services/txCache';
 import { fetchPayUtxos } from '../../commands/sendTransaction';
+import { CollectionMinterPanel } from '../collectionMinter/index';
 
 export class BitcoinToolsViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'bitcoin.toolsView';
@@ -128,6 +129,9 @@ export class BitcoinToolsViewProvider implements vscode.WebviewViewProvider {
               break;
             case 'wallet:mintBsv21':
               await this.handleMintBsv21(webviewView, message.data);
+              break;
+            case 'wallet:openCollectionMinter':
+              await CollectionMinterPanel.show(this._vault, this._extensionUri);
               break;
           }
           return;
