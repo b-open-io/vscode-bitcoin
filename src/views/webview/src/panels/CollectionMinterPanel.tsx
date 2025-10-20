@@ -6,9 +6,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getVscode } from '../vscode';
-import { FolderOpen, Image, Sparkles, Coins, CheckCircle2, Wand2 } from 'lucide-react';
+import { FolderOpen, Image, Sparkles, Coins, CheckCircle2, Wand2, Edit } from 'lucide-react';
 import { RarityEditor } from '../components/collection/RarityEditor';
 import { TraitsEditor } from '../components/collection/TraitsEditor';
+import { TraitOverrideDialog } from '../components/collection/TraitOverrideDialog';
 import '../App.css';
 
 interface CollectionFile {
@@ -77,6 +78,7 @@ export function CollectionMinterPanel() {
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [costEstimate, setCostEstimate] = useState<CostEstimate | null>(null);
   const [activeTab, setActiveTab] = useState('setup');
+  const [editingFile, setEditingFile] = useState<CollectionFile | null>(null);
 
   // Load initial payload
   useEffect(() => {
@@ -145,6 +147,17 @@ export function CollectionMinterPanel() {
 
   const handleMintCollection = () => {
     vscode.postMessage({ command: 'mintCollection' });
+  };
+
+  const handleSaveTraits = (fileId: string, traits: Array<{ name: string; value: string }>, rarityLabel: string) => {
+    vscode.postMessage({
+      command: 'updateFileMetadata',
+      fileId,
+      metadata: {
+        traits,
+        rarityLabel
+      }
+    });
   };
 
   const selectedFiles = files.filter(f => f.selected);
@@ -328,7 +341,18 @@ export function CollectionMinterPanel() {
                           </div>
                         )}
                       </div>
-                      <div className="absolute top-1 right-1">
+                      <div className="absolute top-1 right-1 flex gap-1">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="h-6 w-6 p-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingFile(file);
+                          }}
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
                         <input
                           type="checkbox"
                           checked={file.selected}
@@ -345,6 +369,21 @@ export function CollectionMinterPanel() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Trait Override Dialog */}
+          {editingFile && (
+            <TraitOverrideDialog
+              open={!!editingFile}
+              onOpenChange={(open) => !open && setEditingFile(null)}
+              fileName={editingFile.name}
+              currentTraits={editingFile.metadata?.traits || []}
+              currentRarityLabel={editingFile.metadata?.rarityLabel}
+              onSave={(traits, rarityLabel) => {
+                handleSaveTraits(editingFile.id, traits, rarityLabel);
+                setEditingFile(null);
+              }}
+            />
+          )}
 
           <TabsContent value="traits" className="mt-0">
             <div className="space-y-4">
