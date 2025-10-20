@@ -27,6 +27,8 @@ interface CollectionFile {
   };
 }
 
+type FolderStructure = 'flat' | 'one-level' | 'two-level';
+
 interface CollectionConfig {
   name: string;
   description: string;
@@ -37,6 +39,11 @@ interface CollectionConfig {
     values: string[];
     occurancePercentages: string[];
   }>;
+  folderStructure?: FolderStructure;
+  traitMapping?: {
+    level1TraitName: string;
+    level2TraitName: string;
+  };
 }
 
 interface CostEstimate {
@@ -243,7 +250,50 @@ export function CollectionMinterPanel() {
                   Review and select images for your collection
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
+                {/* Folder Structure Info */}
+                {collectionConfig.folderStructure && (
+                  <div className="border rounded-lg p-3 bg-muted/50 space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-semibold">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      <span>
+                        {collectionConfig.folderStructure === 'flat' && 'Flat structure (all files in root)'}
+                        {collectionConfig.folderStructure === 'one-level' && 'One-level structure (files in subfolders)'}
+                        {collectionConfig.folderStructure === 'two-level' && 'Two-level structure (nested subfolders)'}
+                      </span>
+                    </div>
+
+                    {/* Show auto-detected traits */}
+                    {files.length > 0 && files.some(f => f.metadata?.traits && f.metadata.traits.length > 0) && (
+                      <div className="text-xs space-y-1">
+                        <p className="text-muted-foreground">Auto-detected traits from folders:</p>
+                        {(() => {
+                          const traitSummary = new Map<string, Set<string>>();
+                          files.forEach(file => {
+                            file.metadata?.traits?.forEach(trait => {
+                              if (!traitSummary.has(trait.name)) {
+                                traitSummary.set(trait.name, new Set());
+                              }
+                              traitSummary.get(trait.name)!.add(trait.value);
+                            });
+                          });
+
+                          return Array.from(traitSummary.entries()).map(([name, values]) => (
+                            <div key={name} className="flex gap-2">
+                              <span className="font-mono font-semibold">{name}:</span>
+                              <span className="text-muted-foreground">
+                                {values.size} {values.size === 1 ? 'value' : 'values'}
+                                ({Array.from(values).slice(0, 3).join(', ')}
+                                {values.size > 3 ? '...' : ''})
+                              </span>
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {files.map((file) => (
                     <div
@@ -260,7 +310,22 @@ export function CollectionMinterPanel() {
                           className="w-full h-32 object-cover rounded"
                         />
                       )}
-                      <p className="text-xs mt-2 truncate">{file.name}</p>
+                      <div className="mt-2 space-y-1">
+                        <p className="text-xs truncate font-medium">{file.name}</p>
+                        {file.metadata?.traits && file.metadata.traits.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {file.metadata.traits.map((trait, idx) => (
+                              <span
+                                key={idx}
+                                className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded"
+                                title={`${trait.name}: ${trait.value}`}
+                              >
+                                {trait.value}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                       <div className="absolute top-1 right-1">
                         <input
                           type="checkbox"

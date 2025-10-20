@@ -24,6 +24,8 @@ export interface CollectionItemMetadata {
   mintNumber?: number;
 }
 
+export type FolderStructure = 'flat' | 'one-level' | 'two-level';
+
 export interface CollectionConfig {
   name: string;
   description: string;
@@ -34,6 +36,11 @@ export interface CollectionConfig {
     values: string[];
     occurancePercentages: string[];
   }>;
+  folderStructure?: FolderStructure;
+  traitMapping?: {
+    level1TraitName: string;  // e.g., "Type" or "Category"
+    level2TraitName: string;  // e.g., "Material" or "Variant"
+  };
 }
 
 export class CollectionMinterPanel {
@@ -218,46 +225,190 @@ export class CollectionMinterPanel {
     if (!this._selectedFolder) return;
 
     try {
-      const entries = await fs.readdir(this._selectedFolder, { withFileTypes: true });
       const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp'];
-
       this._files = [];
 
-      for (const entry of entries) {
-        if (entry.isFile()) {
-          const ext = path.extname(entry.name).toLowerCase();
-          if (imageExtensions.includes(ext)) {
-            const filePath = path.join(this._selectedFolder, entry.name);
-            const stats = await fs.stat(filePath);
+      // Detect folder structure
+      const structure = await this.detectFolderStructure(this._selectedFolder, imageExtensions);
 
-            // Read file and convert to data URL
-            const fileData = await fs.readFile(filePath);
-            const base64 = fileData.toString('base64');
-            const contentType = this.getContentType(ext);
-            const dataUrl = `data:${contentType};base64,${base64}`;
+      // Set default trait names based on structure
+      if (!this._collectionConfig.traitMapping) {
+        this._collectionConfig.traitMapping = {
+          level1TraitName: structure === 'two-level' ? 'Category' : 'Type',
+          level2TraitName: 'Variant'
+        };
+      }
+      this._collectionConfig.folderStructure = structure;
 
-            this._files.push({
-              id: crypto.randomUUID(),
-              path: filePath,
-              name: entry.name,
-              dataUrl,
-              contentType,
-              size: stats.size,
-              selected: true,
-              metadata: {
-                name: path.parse(entry.name).name,
-                traits: []
-              }
-            });
-          }
-        }
+      // Load files based on detected structure
+      switch (structure) {
+        case 'flat':
+          await this.loadFlatFiles(this._selectedFolder, imageExtensions);
+          break;
+        case 'one-level':
+          await this.loadOneLevelFiles(this._selectedFolder, imageExtensions);
+          break;
+        case 'two-level':
+          await this.loadTwoLevelFiles(this._selectedFolder, imageExtensions);
+          break;
       }
 
       this.sendUpdate();
-      vscode.window.showInformationMessage(`Loaded ${this._files.length} images from folder`);
+      vscode.window.showInformationMessage(
+        `Loaded ${this._files.length} images (${structure} structure detected)`
+      );
     } catch (error) {
       vscode.window.showErrorMessage(`Error loading files: ${error instanceof Error ? error.message : String(error)}`);
     }
+  }
+
+  private async detectFolderStructure(
+    folderPath: string,
+    imageExtensions: string[]
+  ): Promise<FolderStructure> {
+    const entries = await fs.readdir(folderPath, { withFileTypes: true });
+
+    let hasFiles = false;
+    let hasSubfolders = false;
+    let hasNestedSubfolders = false;
+
+    for (const entry of entries) {
+      if (entry.name.startsWith('.')) continue; // Skip hidden files
+
+      if (entry.isFile()) {
+        const ext = path.extname(entry.name).toLowerCase();
+        if (imageExtensions.includes(ext)) {
+          hasFiles = true;
+        }
+      } else if (entry.isDirectory()) {
+        hasSubfolders = true;
+        // Check if this subfolder has more subfolders
+        const subPath = path.join(folderPath, entry.name);
+        const subEntries = await fs.readdir(subPath, { withFileTypes: true });
+        for (const subEntry of subEntries) {
+          if (subEntry.isDirectory() && !subEntry.name.startsWith('.')) {
+            hasNestedSubfolders = true;
+            break;
+          }
+        }
+      }
+    }
+
+    // Determine structure
+    if (hasFiles && !hasSubfolders) {
+      return 'flat';
+    } else if (hasSubfolders && !hasNestedSubfolders) {
+      return 'one-level';
+    } else if (hasNestedSubfolders) {
+      return 'two-level';
+    }
+
+    return 'flat'; // Default fallback
+  }
+
+  private async loadFlatFiles(folderPath: string, imageExtensions: string[]) {
+    const entries = await fs.readdir(folderPath, { withFileTypes: true });
+
+    for (const entry of entries) {
+      if (entry.isFile()) {
+        const ext = path.extname(entry.name).toLowerCase();
+        if (imageExtensions.includes(ext)) {
+          await this.addFileToCollection(folderPath, entry.name, ext, []);
+        }
+      }
+    }
+  }
+
+  private async loadOneLevelFiles(folderPath: string, imageExtensions: string[]) {
+    const entries = await fs.readdir(folderPath, { withFileTypes: true });
+    const traitName = this._collectionConfig.traitMapping?.level1TraitName || 'Type';
+
+    for (const entry of entries) {
+      if (entry.isDirectory() && !entry.name.startsWith('.')) {
+        const subfolderPath = path.join(folderPath, entry.name);
+        const subEntries = await fs.readdir(subfolderPath, { withFileTypes: true });
+
+        for (const subEntry of subEntries) {
+          if (subEntry.isFile()) {
+            const ext = path.extname(subEntry.name).toLowerCase();
+            if (imageExtensions.includes(ext)) {
+              const traits = [{ name: traitName, value: entry.name }];
+              await this.addFileToCollection(subfolderPath, subEntry.name, ext, traits);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private async loadTwoLevelFiles(folderPath: string, imageExtensions: string[]) {
+    const entries = await fs.readdir(folderPath, { withFileTypes: true });
+    const level1TraitName = this._collectionConfig.traitMapping?.level1TraitName || 'Category';
+    const level2TraitName = this._collectionConfig.traitMapping?.level2TraitName || 'Variant';
+
+    for (const entry of entries) {
+      if (entry.isDirectory() && !entry.name.startsWith('.')) {
+        const level1Path = path.join(folderPath, entry.name);
+        const level1Entries = await fs.readdir(level1Path, { withFileTypes: true });
+
+        for (const level1Entry of level1Entries) {
+          if (level1Entry.isDirectory() && !level1Entry.name.startsWith('.')) {
+            const level2Path = path.join(level1Path, level1Entry.name);
+            const level2Entries = await fs.readdir(level2Path, { withFileTypes: true });
+
+            for (const level2Entry of level2Entries) {
+              if (level2Entry.isFile()) {
+                const ext = path.extname(level2Entry.name).toLowerCase();
+                if (imageExtensions.includes(ext)) {
+                  const traits = [
+                    { name: level1TraitName, value: entry.name },
+                    { name: level2TraitName, value: level1Entry.name }
+                  ];
+                  await this.addFileToCollection(level2Path, level2Entry.name, ext, traits);
+                }
+              }
+            }
+          } else if (level1Entry.isFile()) {
+            // Handle files directly in level 1 folders (treat as single trait)
+            const ext = path.extname(level1Entry.name).toLowerCase();
+            if (imageExtensions.includes(ext)) {
+              const traits = [{ name: level1TraitName, value: entry.name }];
+              await this.addFileToCollection(level1Path, level1Entry.name, ext, traits);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private async addFileToCollection(
+    filePath: string,
+    fileName: string,
+    ext: string,
+    traits: Array<{ name: string; value: string; }>
+  ) {
+    const fullPath = path.join(filePath, fileName);
+    const stats = await fs.stat(fullPath);
+
+    // Read file and convert to data URL
+    const fileData = await fs.readFile(fullPath);
+    const base64 = fileData.toString('base64');
+    const contentType = this.getContentType(ext);
+    const dataUrl = `data:${contentType};base64,${base64}`;
+
+    this._files.push({
+      id: crypto.randomUUID(),
+      path: fullPath,
+      name: fileName,
+      dataUrl,
+      contentType,
+      size: stats.size,
+      selected: true,
+      metadata: {
+        name: path.parse(fileName).name,
+        traits
+      }
+    });
   }
 
   private getContentType(ext: string): string {
