@@ -196,6 +196,11 @@
         "category": "Bitcoin"
       },
       {
+        "command": "bitcoin.openCollectionMinter",
+        "title": "Collection Minter",
+        "category": "Bitcoin"
+      },
+      {
         "command": "bitcoin.encrypt",
         "title": "Encrypt Data",
         "category": "Bitcoin"

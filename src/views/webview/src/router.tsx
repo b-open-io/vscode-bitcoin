@@ -4,6 +4,7 @@ import { TransactionParserPanel } from './panels/TransactionParserPanel'
 import { ScriptDebuggerPanel } from './panels/ScriptDebuggerPanel'
 import { KeyVaultPanel } from './panels/KeyVaultPanel'
 import { BitcoinToolsPanel } from './panels/BitcoinToolsPanel'
+import { CollectionMinterPanel } from './panels/CollectionMinterPanel'
 
 export function AppRoutes() {
   return (
@@ -25,6 +26,9 @@ export function AppRoutes() {
       <Route path="/debugger" element={<ScriptDebuggerPanel />} />
       <Route path="/debugger/:network/:txid" element={<ScriptDebuggerPanel />} />
       <Route path="/debugger/:network/:txid/:inputIndex" element={<ScriptDebuggerPanel />} />
+
+      {/* Collection Minter */}
+      <Route path="/collection-minter" element={<CollectionMinterPanel />} />
 
       {/* Default redirect based on panel type */}
       <Route path="*" element={<Navigate to={getDefaultRoute()} replace />} />
@@ -49,6 +53,8 @@ function getDefaultRoute(): string {
       return '/parser'
     case 'script-executor':
       return '/debugger'
+    case 'collection-minter':
+      return '/collection-minter'
     default:
       return '/tools'
   }
