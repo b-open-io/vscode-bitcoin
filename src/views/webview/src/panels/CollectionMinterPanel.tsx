@@ -6,7 +6,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getVscode } from '../vscode';
-import { FolderOpen, Image, Sparkles, Coins, CheckCircle2 } from 'lucide-react';
+import { FolderOpen, Image, Sparkles, Coins, CheckCircle2, Wand2 } from 'lucide-react';
+import { RarityEditor } from '../components/collection/RarityEditor';
+import { TraitsEditor } from '../components/collection/TraitsEditor';
 import '../App.css';
 
 interface CollectionFile {
@@ -345,19 +347,75 @@ export function CollectionMinterPanel() {
           </TabsContent>
 
           <TabsContent value="traits" className="mt-0">
-            <Card>
-              <CardHeader>
-                <CardTitle>Traits & Rarities</CardTitle>
-                <CardDescription>
-                  Define traits and rarity levels for your collection
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Traits and rarity configuration UI coming next...
-                </p>
-              </CardContent>
-            </Card>
+            <div className="space-y-4">
+              {/* Rarity Labels Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Rarity Labels</CardTitle>
+                  <CardDescription>
+                    Define rarity tiers and their distribution across the collection
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <RarityEditor
+                    rarities={collectionConfig.rarityLabels || []}
+                    onChange={(rarities) => handleUpdateConfig({ rarityLabels: rarities })}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Traits Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Traits</CardTitle>
+                  <CardDescription>
+                    Define trait categories and their possible values
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <TraitsEditor
+                    traits={collectionConfig.traits || []}
+                    onChange={(traits) => handleUpdateConfig({ traits })}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Auto-Assignment Card */}
+              {selectedFiles.length > 0 && (collectionConfig.rarityLabels?.length || 0) > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Auto-Assignment</CardTitle>
+                    <CardDescription>
+                      Automatically assign rarities and traits to your collection items
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="text-sm text-muted-foreground space-y-2">
+                      <p>
+                        This will randomly assign rarity labels to {selectedFiles.length} items
+                        based on the percentages you've defined above.
+                      </p>
+                      {(collectionConfig.traits?.length || 0) > 0 && (
+                        <p>
+                          Additional traits will also be assigned based on their occurrence percentages.
+                        </p>
+                      )}
+                    </div>
+                    <Button
+                      onClick={() => {
+                        vscode.postMessage({
+                          command: 'autoAssignTraits'
+                        });
+                      }}
+                      className="w-full"
+                    >
+                      <Wand2 className="h-4 w-4 mr-2" />
+                      Auto-Assign Rarities & Traits
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="mint" className="mt-0">

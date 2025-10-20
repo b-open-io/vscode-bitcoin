@@ -203,6 +203,10 @@ export class CollectionMinterPanel {
       case 'estimateCosts':
         await this.estimateCosts();
         break;
+
+      case 'autoAssignTraits':
+        this.autoAssignTraits();
+        break;
     }
   }
 
@@ -468,6 +472,81 @@ export class CollectionMinterPanel {
         totalBSV: inscriptionCost + txFees
       }
     });
+  }
+
+  private autoAssignTraits() {
+    const selectedFiles = this._files.filter(f => f.selected);
+    const { rarityLabels, traits } = this._collectionConfig;
+
+    if (!rarityLabels || rarityLabels.length === 0) {
+      vscode.window.showWarningMessage('Please define rarity labels first');
+      return;
+    }
+
+    // Validate percentages add up to 100
+    const rarityTotal = rarityLabels.reduce((sum, r) => sum + (parseFloat(r.percentage) || 0), 0);
+    if (Math.abs(rarityTotal - 100) > 0.01) {
+      vscode.window.showWarningMessage('Rarity percentages must add up to 100%');
+      return;
+    }
+
+    // Weighted random selection helper
+    const weightedRandom = (items: Array<{ label?: string; value?: string; percentage: string }>) => {
+      const random = Math.random() * 100;
+      let cumulative = 0;
+
+      for (const item of items) {
+        cumulative += parseFloat(item.percentage) || 0;
+        if (random <= cumulative) {
+          return item.label || item.value || '';
+        }
+      }
+
+      return items[items.length - 1]?.label || items[items.length - 1]?.value || '';
+    };
+
+    // Assign rarities and traits to each file
+    for (const file of selectedFiles) {
+      // Preserve existing traits from folder structure
+      const existingTraits = file.metadata?.traits || [];
+
+      // Assign rarity label
+      const rarityLabel = weightedRandom(rarityLabels);
+
+      // Assign additional traits if defined
+      const additionalTraits: Array<{ name: string; value: string; }> = [];
+
+      if (traits && traits.length > 0) {
+        for (const trait of traits) {
+          // Validate trait percentages
+          const traitTotal = trait.occurancePercentages.reduce((sum, p) => sum + (parseFloat(p) || 0), 0);
+
+          if (Math.abs(traitTotal - 100) < 0.01 && trait.values.length > 0) {
+            // Create items for weighted random
+            const traitItems = trait.values.map((value, i) => ({
+              value,
+              percentage: trait.occurancePercentages[i] || '0'
+            }));
+
+            const selectedValue = weightedRandom(traitItems);
+            additionalTraits.push({ name: trait.name, value: selectedValue });
+          }
+        }
+      }
+
+      // Update file metadata
+      file.metadata = {
+        ...file.metadata,
+        name: file.metadata?.name || path.parse(file.name).name,
+        rarityLabel,
+        traits: [...existingTraits, ...additionalTraits]
+      };
+    }
+
+    this.sendUpdate();
+    vscode.window.showInformationMessage(
+      `Assigned rarities and traits to ${selectedFiles.length} items`
+    );
   }
 
   private async mintCollection() {
