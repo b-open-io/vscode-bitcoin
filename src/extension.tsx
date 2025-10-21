@@ -33,6 +33,7 @@ import { KeyPanel } from './views/keyVault/index';
 import { TransactionDecoderPanel } from './views/transactionDecoder/index';
 import { ScriptDebuggerPanel } from './views/scriptDebugger/index';
 import { CollectionMinterPanel } from './views/collectionMinter/index';
+import { CollectionsManagerPanel } from './views/collectionsManager/index';
 import { KeyVault } from './keyVault';
 import { OutputManager } from './output';
 import { DataFormat, convertData, detectFormat } from './utils';
@@ -349,6 +350,15 @@ export async function activate(context: ExtensionContext) {
     },
   );
   context.subscriptions.push(openCollectionMinterCommand);
+
+  // Register collections manager panel command
+  const openCollectionsManagerCommand = vsApi.commands.registerCommand(
+    'bitcoin.openCollectionsManager',
+    async () => {
+      await CollectionsManagerPanel.show(keyVault, context.extensionUri);
+    },
+  );
+  context.subscriptions.push(openCollectionsManagerCommand);
 
   // Register transaction decoder panel command
   const openTransactionDecoderCommand = vsApi.commands.registerCommand(

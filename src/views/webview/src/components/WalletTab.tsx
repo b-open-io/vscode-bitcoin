@@ -842,29 +842,29 @@ export default function WalletTab({ isActive }: WalletTabProps) {
                       </AccordionContent>
                     </AccordionItem>
 
-                    {/* Collection Minter */}
+                    {/* Collections Manager */}
                     <AccordionItem value="mint-collection">
                       <AccordionTrigger className="text-xs py-2">
                         <div className="flex items-center gap-2">
                           <Grid className="h-3 w-3" />
-                          Collection Minter
+                          Collections
                         </div>
                       </AccordionTrigger>
                       <AccordionContent>
                         <div className="text-center py-4 text-muted-foreground text-xs">
-                          <p className="mb-2">Create NFT collections with AI-generated images</p>
+                          <p className="mb-2">Manage and mint NFT collections</p>
                           <Button
                             size="sm"
                             variant="default"
                             onClick={() => {
                               vscode.postMessage({
-                                type: 'wallet:openCollectionMinter'
+                                type: 'wallet:openCollectionsManager'
                               })
                             }}
                             className="h-7 text-xs"
                           >
                             <Grid className="h-3 w-3 mr-1" />
-                            Open Collection Minter
+                            Open Collections Manager
                           </Button>
                         </div>
                       </AccordionContent>

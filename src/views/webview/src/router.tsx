@@ -5,6 +5,7 @@ import { ScriptDebuggerPanel } from './panels/ScriptDebuggerPanel'
 import { KeyVaultPanel } from './panels/KeyVaultPanel'
 import { BitcoinToolsPanel } from './panels/BitcoinToolsPanel'
 import { CollectionMinterPanel } from './panels/CollectionMinterPanel'
+import { CollectionsManagerPanel } from './panels/CollectionsManagerPanel'
 
 export function AppRoutes() {
   return (
@@ -29,6 +30,9 @@ export function AppRoutes() {
 
       {/* Collection Minter */}
       <Route path="/collection-minter" element={<CollectionMinterPanel />} />
+
+      {/* Collections Manager */}
+      <Route path="/collections-manager" element={<CollectionsManagerPanel />} />
 
       {/* Default redirect based on panel type */}
       <Route path="*" element={<Navigate to={getDefaultRoute()} replace />} />
@@ -55,6 +59,8 @@ function getDefaultRoute(): string {
       return '/debugger'
     case 'collection-minter':
       return '/collection-minter'
+    case 'collections-manager':
+      return '/collections-manager'
     default:
       return '/tools'
   }

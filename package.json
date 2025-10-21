@@ -507,6 +507,11 @@
           "default": 60000,
           "description": "Wallet auto-refresh interval in milliseconds (0 to disable)"
         },
+        "bitcoin.ai.openaiApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "OpenAI API key for AI-powered collection generation features (get one at platform.openai.com)"
+        },
         "bitcoin.script.enableOpcodeHighlighting": {
           "type": "boolean",
           "default": true,
@@ -630,7 +635,9 @@
     "bitcoin-backup": "^0.0.3",
     "bsv-bap": "^0.1.12",
     "js-1sat-ord": "^0.1.82",
-    "node-fetch": "^3.3.2"
+    "node-fetch": "^3.3.2",
+    "openai": "^6.6.0",
+    "satoshi-token": "^0.0.4"
   },
   "optionalDependencies": {
     "bmapjs": "^0.4.0",
