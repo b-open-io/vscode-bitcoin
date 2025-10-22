@@ -275,6 +275,13 @@ export async function activate(context: ExtensionContext) {
     return _workspaceManager;
   };
 
+  // Register custom URI scheme for image processing
+  const { ImageUriProvider } = await import('./imageUriProvider');
+  const imageUriProvider = new ImageUriProvider();
+  context.subscriptions.push(
+    vsApi.workspace.registerTextDocumentContentProvider('vscode-bitcoin-image', imageUriProvider)
+  );
+
   // Register Bitcoin Tools view provider (with tabs for Quick Actions, Data Conversion, Help)
   const bitcoinToolsViewProvider = new BitcoinToolsViewProvider(context.extensionUri, keyVault, context);
   context.subscriptions.push(

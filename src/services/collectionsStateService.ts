@@ -20,6 +20,7 @@ export interface Collection {
       level1TraitName: string;
       level2TraitName: string;
     };
+    batchSize?: number;
   };
   selectedFolder: string | null;
   files: Array<{
