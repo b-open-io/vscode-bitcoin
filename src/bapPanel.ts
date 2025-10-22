@@ -56,18 +56,33 @@ function normalizeImageUrl(url: string | undefined): string | null {
 }
 
 export class BapPanel {
-  public static currentPanel: BapPanel | undefined;
+  // Map of idKey to BapPanel instances - one panel per BAP identity
+  private static panels: Map<string, BapPanel> = new Map();
   private readonly _panel: WebviewPanel;
   private _disposables: Disposable[] = [];
+  private readonly _idKey: string;
 
-  private constructor(panel: WebviewPanel) {
+  private constructor(panel: WebviewPanel, idKey: string) {
     this._panel = panel;
+    this._idKey = idKey;
 
     // Listen for when the panel is disposed
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
   }
 
   public static show(profile: EnrichedProfile) {
+    const idKey = profile.idKey;
+
+    // Check if a panel already exists for this BAP identity
+    const existingPanel = BapPanel.panels.get(idKey);
+    if (existingPanel) {
+      // Update existing panel and reveal it
+      existingPanel.update(profile);
+      existingPanel._panel.reveal(vsApi.ViewColumn.One);
+      return existingPanel;
+    }
+
+    // Create new panel for this BAP identity
     const panel = vsApi.window.createWebviewPanel(
       'bapProfile',
       `BAP Profile: ${profile.identity.alternateName || profile.idKey}`,
@@ -78,7 +93,8 @@ export class BapPanel {
       },
     );
 
-    const bapPanel = new BapPanel(panel);
+    const bapPanel = new BapPanel(panel, idKey);
+    BapPanel.panels.set(idKey, bapPanel);
     bapPanel.update(profile);
     return bapPanel;
   }
@@ -407,7 +423,8 @@ export class BapPanel {
   }
 
   public dispose() {
-    BapPanel.currentPanel = undefined;
+    // Remove from the panels map
+    BapPanel.panels.delete(this._idKey);
     this._panel.dispose();
     while (this._disposables.length) {
       const x = this._disposables.pop();

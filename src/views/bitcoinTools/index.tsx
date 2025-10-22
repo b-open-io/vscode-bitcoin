@@ -326,6 +326,9 @@ export class BitcoinToolsViewProvider implements vscode.WebviewViewProvider {
                 type: 'decodeHistory:rawTx',
                 data: { txid, rawTx }
               });
+            } else if (action === 'parse') {
+              // Open transaction parser
+              vscode.commands.executeCommand('bitcoin.openTransactionParser', rawTx);
             } else {
               // Copy to clipboard
               await vscode.env.clipboard.writeText(rawTx);
@@ -341,6 +344,15 @@ export class BitcoinToolsViewProvider implements vscode.WebviewViewProvider {
         // Handle transaction broadcast messages
         if (message.type === 'transaction:broadcast') {
           await this.handleTransactionBroadcast(webviewView, message.data);
+          return;
+        }
+
+        // Handle open transaction parser
+        if (message.type === 'transaction:openParser') {
+          const rawTxHex = message.data?.rawTxHex;
+          if (rawTxHex) {
+            vscode.commands.executeCommand('bitcoin.openTransactionParser', rawTxHex);
+          }
           return;
         }
 

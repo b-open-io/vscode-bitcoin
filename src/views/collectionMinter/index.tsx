@@ -492,7 +492,7 @@ export class CollectionMinterPanel {
       case 'openTransaction':
         if (msg.txid) {
           // Open transaction in Transaction Decoder
-          vscode.commands.executeCommand('bitcoin.decodeTransaction', msg.txid);
+          vscode.commands.executeCommand('bitcoin.openTransactionDecoder', { txid: msg.txid });
         }
         break;
     }
@@ -2192,14 +2192,14 @@ Many collections have messy AI-generated or descriptive filenames that contain t
 **The Pipeline Pattern:**
 1. **Extract item info from filename** - Parse "black_lotus_petals_on_wooden_table..." → item name is "Black Lotus Petals"
 2. **Set metadata** - Use set-metadata to store the extracted name, rarity, traits
-3. **Normalize ALL filenames** - Rename to clean uniform pattern: `{item-name}-{rarity}-v{n}.png` or `{item-name}-v{n}.png`
+3. **Normalize ALL filenames** - Rename to clean uniform pattern: (item-name)-(rarity)-v(n).png or (item-name)-v(n).png
 4. **Detect variants** - Use map-traits to mark v1, v2, v3 as variants
 
 **Example transformation:**
-- BEFORE: `Black Lotus Petals/black_lotus_petals_on_wooden_table_night_time_photo.png`
+- BEFORE: Black Lotus Petals/black_lotus_petals_on_wooden_table_night_time_photo.png
 - Extract: "Black Lotus Petals" from folder, determine rarity = "Rare"
 - Set metadata: name="Black Lotus Petals", rarityLabel="Rare"
-- Normalize filename: `black-lotus-petals-rare-v1.png`
+- Normalize filename: black-lotus-petals-rare-v1.png
 - Mark as variant
 
 This creates a completely uniform, predictable file structure where filenames encode the metadata.

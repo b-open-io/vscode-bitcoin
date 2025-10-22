@@ -73,6 +73,24 @@
   - `rarityLabel` is a string, not object (e.g., "Common")
   - `traits` array has no `percentage` field on items
   - Percentages only at collection level, items reference values
+- **Pipeline Type Definitions** - Added missing operation types to union
+  - Added `exclude-file`, `move-file`, `rename-file`, `set-metadata` types
+  - Removed unreachable default cases from exhaustive switch statements
+
+### Fixed - Transaction Parser
+- **Command Registration** - Registered missing `bitcoin.openTransactionParser` command
+- **Parse Button Handlers** - All "Parse Transaction" buttons now work correctly
+  - Fixed parse from decode history dropdown
+  - Fixed parse from Transaction Decoder panel
+  - Fixed parse from Bitcoin Tools decode component
+  - Added `transaction:openParser` message handlers in all backends
+
+### Fixed - BAP Profile Panel
+- **Singleton Pattern** - Implemented proper singleton per BAP identity
+  - One panel per unique BAP identity (idKey)
+  - Opening same profile reuses and updates existing panel
+  - Different profiles can each have their own panel open
+  - Proper cleanup when panels are closed
 
 ### Performance Improvements
 - Lazy image loading reduces initial load time by 30-60x

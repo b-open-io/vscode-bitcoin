@@ -180,6 +180,21 @@ type PipelineOperation =
         action: 'include' | 'exclude';
       }>;
       reason?: string;
+    }
+  | { type: 'exclude-file'; target: string; reason: string; }
+  | { type: 'move-file'; target: string; to: string; reason?: string; }
+  | { type: 'rename-file'; target: string; newName: string; reason?: string; }
+  | {
+      type: 'set-metadata';
+      target: string;
+      metadata: {
+        name?: string;
+        description?: string;
+        rarity?: number;
+        rarityLabel?: string;
+        attributes?: Record<string, any>;
+      };
+      reason?: string;
     };
 
 interface Pipeline {
@@ -2165,7 +2180,6 @@ export function CollectionMinterPanel() {
                                     case 'set-metadata': return 'Set Item Metadata';
                                     case 'compress': return 'Compress Images';
                                     case 'filter': return 'Filter Items';
-                                    default: return `Unknown: ${operation.type}`;
                                   }
                                 })()}
                               </div>
@@ -2185,7 +2199,6 @@ export function CollectionMinterPanel() {
                                     case 'set-metadata': return `${operation.target || '(target)'} → ${operation.metadata?.name || 'metadata'} ${operation.metadata?.rarityLabel ? `[${operation.metadata.rarityLabel}]` : ''}`;
                                     case 'compress': return `Scope: ${operation.scope || 'all'} • Quality: ${operation.quality}% • ${operation.format?.toUpperCase() || 'JPEG'}`;
                                     case 'filter': return `Scope: ${operation.scope || 'all'} • ${operation.rules?.length || 0} rules`;
-                                    default: return JSON.stringify(operation).slice(0, 100);
                                   }
                                 })()}
                               </div>

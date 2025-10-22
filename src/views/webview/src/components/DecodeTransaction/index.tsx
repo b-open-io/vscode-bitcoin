@@ -243,7 +243,7 @@ export function DecodeTransaction({ rawTxHex, onRawTxHexChange, openInWindow = f
             <InputGroupAddon align="block-start" className="border-b">
               <InputGroupText className="font-medium text-xs">
                 <ScanQrCode className="w-3 h-3" />
-                Decode Raw Transaction
+                <span>Decode Raw Transaction</span>
               </InputGroupText>
               <InputGroupButton
                 onClick={handleClear}
@@ -272,6 +272,23 @@ export function DecodeTransaction({ rawTxHex, onRawTxHexChange, openInWindow = f
       {/* Decoded Transaction Display */}
       {decodedTx && (
         <div className="flex-1 flex flex-col">
+          {/* Transaction Header with Txid */}
+          <div className="p-4 border-b">
+            <div className="flex items-center gap-2 mb-4">
+              <ScanQrCode className="w-4 h-4 text-muted-foreground" />
+              <code className="text-xs font-mono text-muted-foreground break-all">{decodedTx.txid}</code>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="ml-auto"
+                onClick={() => handleCopy(decodedTx.txid, 'Transaction ID')}
+                title="Copy transaction ID"
+              >
+                <Copy className="w-3 h-3" />
+              </Button>
+            </div>
+          </div>
+
           {/* Transaction Metadata */}
           <div className="p-4 border-b">
             <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-xs">

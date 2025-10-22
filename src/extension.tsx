@@ -31,6 +31,7 @@ import { API_HOST } from './constants';
 import { EncryptionService } from './encryption';
 import { KeyPanel } from './views/keyVault/index';
 import { TransactionDecoderPanel } from './views/transactionDecoder/index';
+import { TransactionParserPanel } from './views/transactionParser/index';
 import { ScriptDebuggerPanel } from './views/scriptDebugger/index';
 import { CollectionMinterPanel } from './views/collectionMinter/index';
 import { CollectionsManagerPanel } from './views/collectionsManager/index';
@@ -376,6 +377,15 @@ export async function activate(context: ExtensionContext) {
     },
   );
   context.subscriptions.push(openTransactionDecoderCommand);
+
+  // Register transaction parser panel command
+  const openTransactionParserCommand = vsApi.commands.registerCommand(
+    'bitcoin.openTransactionParser',
+    async (rawTxHex?: string) => {
+      TransactionParserPanel.show(context.extensionUri, rawTxHex);
+    },
+  );
+  context.subscriptions.push(openTransactionParserCommand);
 
   // Register script executor panel command
   const openScriptDebuggerCommand = vsApi.commands.registerCommand(

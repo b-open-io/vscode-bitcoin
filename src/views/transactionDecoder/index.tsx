@@ -222,6 +222,12 @@ export class TransactionDecoderPanel {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
         vscode.window.showErrorMessage(`Failed to load transaction: ${errorMessage}`)
       }
+    } else if (message.type === 'transaction:openParser') {
+      // Open transaction parser with raw tx hex
+      const rawTxHex = message.data?.rawTxHex
+      if (rawTxHex) {
+        vscode.commands.executeCommand('bitcoin.openTransactionParser', rawTxHex)
+      }
     } else if (message.type === 'transaction:executeScript') {
       // Fetch source transaction to get locking script, then open script executor
       try {
